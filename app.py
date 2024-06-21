@@ -1,33 +1,17 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import skops.io as sio
-
-# Define the request model
-class TextRequest(BaseModel):
-    text: str
+from fastapi import FastAPI
+import joblib
+import pandas as pd
 
 app = FastAPI()
 
-# Load model and vectorizer
-try:
-    model = sio.load('model_sentimen_analis.skops')
-    vectorizer = sio.load('vectorizer.skops')
-except Exception as e:
-    raise RuntimeError(f"Failed to load model or vectorizer: {e}")
-
-@app.get("/")
-def read_root():
-    return {"message": "Sentiment Analysis API is running!"}
+# Memuat model
+model = joblib.load('model_sentimen_analis.pkl')
 
 @app.post("/predict")
-def predict(request: TextRequest):
-    text = request.text
-    if not text:
-        raise HTTPException(status_code=400, detail="No text provided")
+async def predict(data: dict):
+    df = pd.DataFrame([data])
+    prediction = model.predict(df)
+    return {"prediction": prediction.tolist()}
 
-    try:
-        X = vectorizer.transform([text])
-        prediction = model.predict(X)
-        return {"prediction": prediction[0]}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during prediction: {e}")
+# Menjalankan aplikasi dengan Uvicorn
+# Di terminal, jalankan: uvicorn main:app --reload
