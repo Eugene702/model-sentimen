@@ -1,6 +1,6 @@
-Flask
+fastapi
+uvicorn
 joblib
 scikit-learn
 pandas
 openpyxl
-gunicorn
